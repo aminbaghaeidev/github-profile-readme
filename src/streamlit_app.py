@@ -4,6 +4,8 @@ from pathlib import Path
 
 import streamlit as st
 
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 from src.github_profile import generate_profile
 from src.gpt import chatbot
 from src.sections import (
