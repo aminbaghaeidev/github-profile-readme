@@ -1,8 +1,9 @@
 import urllib.parse
 
 import streamlit as st
+from streamlit_tags import st_tags
 
-from src.constants import default_description, skills, tech_stacks
+from src.constants import POPULAR_TECH_STACKS, default_description, skills, tech_stacks
 
 
 def add_personal_info(tab, **kwargs):
@@ -80,31 +81,38 @@ def add_tech_stack(tab, **kwargs):
     """
     BADGE_TEMPLATE = '![Bootstrap](https://img.shields.io/badge/-{badge}-05122A?style={style}&logo={logo}&color={color})'
     with tab:
-        st.write('''Add your tech stacks. You can add any tech stack and skills you want.
-        **Just make sure to separate them with a new line.**
-        ''')
+        st.write("Add your tech stacks. You can add any tech stack and skills you want.")
+
         # Badge style and color
         col1, col2 = st.columns(2)
         style = col1.selectbox('Style', ['flat-square', 'flat', 'plastic', 'for-the-badge', 'social'], key='stack_style')
         color = col2.color_picker('Color', '#353535', key='stack_color')
         color = color.lstrip('#')
 
-        # Tech stacks
-        col1, col2 = st.columns(2)
-        kwargs['tech_stacks'] = col1.text_area('Tech Stacks:', tech_stacks, height=300, key='tech_stacks')
-        kwargs['tech_stacks'] = kwargs['tech_stacks'].split('\n')
-        kwargs['tech_stacks'] = list(filter(lambda x: x, kwargs['tech_stacks']))
+        st.divider()
+
+        selected_techs = st_tags(
+            label='Tech Stacks:',
+            text='Write and Press Enter to Apply',
+            value=tech_stacks,
+            suggestions=POPULAR_TECH_STACKS,
+            maxtags=112,
+            key='tech_tags'
+        )
+
+        # By this chatbot will recieve clean text from tech stacks
+        st.session_state['raw_tech_list'] = ", ".join(selected_techs)
 
         # Logos and badges
-        logos = ['-'.join(tech_stack.split()) for tech_stack in kwargs['tech_stacks']]
-        badges = [urllib.parse.quote(tech_stack) for tech_stack in kwargs['tech_stacks']]
+        logos = ['-'.join(tech_stack.split()) for tech_stack in selected_techs]
+        badges = [urllib.parse.quote(tech_stack) for tech_stack in selected_techs]
 
         # Format the final url
-        kwargs['tech_stacks'] = zip(badges, logos)
-        kwargs['tech_stacks'] = [BADGE_TEMPLATE.format(
-            badge=badge, logo=logo, style=style, color=color
-        ) for badge, logo in kwargs['tech_stacks']]
-        kwargs['tech_stacks'] = ' '.join(kwargs['tech_stacks'])
+        badge_pairs = zip(badges, logos)
+        kwargs['tech_stacks'] = ' '.join(
+            BADGE_TEMPLATE.format(badge=badge, logo=logo, style=style, color=color)
+            for badge, logo in badge_pairs
+        )
 
     return kwargs
 
